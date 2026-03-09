@@ -26,6 +26,7 @@ services:
       DISPLAY: host.docker.internal:0
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
+      - ./app_target:/app/target
 #    network_mode: bridge # it cancels network of docker -> docker cannot find host db.
 volumes:
   db_data:
