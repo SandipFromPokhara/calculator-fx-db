@@ -20,19 +20,18 @@ pipeline {
             }
         }
 
-
         stage('Build Docker Image') {
             steps {
                 script {
                     if (isUnix()) {
                         sh '''
-                        docker build --pull -t ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} .
-                        docker images
+                            docker build --pull -t ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} .
+                            docker images
                         '''
                     } else {
                         bat """
-                        docker build --pull -t %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG% .
-                        docker images
+                            docker build --pull -t %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG% .
+                            docker images
                         """
                     }
                 }
@@ -44,28 +43,28 @@ pipeline {
                 script {
                     if (isUnix()) {
                         sh '''
-                # Start containers in detached mode
-                docker-compose up -d
+                            # Start containers
+                            docker-compose up -d
 
-                # Wait a few seconds for DB to initialize
-                sleep 10
+                            # Wait for DB to initialize
+                            sleep 10
 
-                # Show databases and tables
-                docker-compose exec -T db mysql -uroot -pCalcPass123 -e "SHOW DATABASES;"
-                docker-compose exec -T db mysql -uroot -pCalcPass123 -e "USE calc_data; SHOW TABLES;"
-                '''
+                            # Check databases and tables
+                            docker exec -i calculator-db mysql -uroot -pCalcPass123 -e "SHOW DATABASES;"
+                            docker exec -i calculator-db mysql -uroot -pCalcPass123 -e "USE calc_data; SHOW TABLES;"
+                        '''
                     } else {
                         bat """
-                REM Start containers in detached mode
-                docker-compose up -d
+                            REM Start containers
+                            docker-compose up -d
 
-                REM Wait a few seconds for DB to initialize
-                timeout /t 10
+                            REM Wait 10 seconds for DB
+                            powershell -Command "Start-Sleep -s 10"
 
-                REM Show databases and tables
-                docker-compose exec db mysql -uroot -pCalcPass123 -e "SHOW DATABASES;"
-                docker-compose exec db mysql -uroot -pCalcPass123 -e "USE calc_data; SHOW TABLES;"
-                """
+                            REM Check databases and tables
+                            docker exec -i calculator-db mysql -uroot -pCalcPass123 -e "SHOW DATABASES;"
+                            docker exec -i calculator-db mysql -uroot -pCalcPass123 -e "USE calc_data; SHOW TABLES;"
+                        """
                     }
                 }
             }
@@ -81,21 +80,21 @@ pipeline {
                     )]) {
                         if (isUnix()) {
                             sh '''
-                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                            docker push ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}
-                            docker tag ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} ${DOCKERHUB_REPO}:latest
-                            docker push ${DOCKERHUB_REPO}:latest
-                            docker image rm ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}
-                            docker image prune -f
+                                echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                                docker push ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}
+                                docker tag ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} ${DOCKERHUB_REPO}:latest
+                                docker push ${DOCKERHUB_REPO}:latest
+                                docker image rm ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}
+                                docker image prune -f
                             '''
                         } else {
                             bat """
-                            echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
-                            docker push %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG%
-                            docker tag %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG% %DOCKERHUB_REPO%:latest
-                            docker push %DOCKERHUB_REPO%:latest
-                            docker image rm %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG%
-                            docker image prune -f
+                                echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                                docker push %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG%
+                                docker tag %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG% %DOCKERHUB_REPO%:latest
+                                docker push %DOCKERHUB_REPO%:latest
+                                docker image rm %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG%
+                                docker image prune -f
                             """
                         }
                     }
