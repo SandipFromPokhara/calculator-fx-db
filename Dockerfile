@@ -20,14 +20,8 @@ WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 
-# Build the JAR (skip tests so Jenkins won't fail)
+# Build the JAR inside the image
 RUN mvn clean package -DskipTests
 
-# Verify target folder (optional)
-RUN ls -l target
-
-# Copy the built JAR with the correct finalName
-COPY target/calculator.jar app.jar
-
-# Run the JAR with JavaFX modules
-CMD ["java", "--module-path", "/opt/javafx-sdk-21/lib", "--add-modules", "javafx.controls,javafx.fxml", "-jar", "app.jar"]
+# Run the JAR directly from target folder
+CMD ["java", "--module-path", "/opt/javafx-sdk-21/lib", "--add-modules", "javafx.controls,javafx.fxml", "-jar", "target/calculator.jar"]
