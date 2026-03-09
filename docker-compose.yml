@@ -14,7 +14,8 @@ services:
       - db_data:/var/lib/mysql
 
   app:
-    image: sandipranjit/calculator:latest
+    build:
+      context: .
     container_name: calculator-app
     depends_on:
       - db
