@@ -69,13 +69,13 @@ pipeline {
                 script {
                     if (isUnix()) {
                         sh '''
-                            docker build --pull -t ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} .
+                            docker build -t ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} .
                             docker images
                             '''
                     } else {
                         bat """
                         REM --- Build Docker image with build number tag ---
-                        docker build --pull -t %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG% .
+                        docker build -t %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG% .
         
                         REM --- Verify image exists ---
                         docker images
