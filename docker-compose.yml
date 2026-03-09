@@ -14,7 +14,7 @@ services:
       - db_data:/var/lib/mysql
 
   app:
-    image: sandipranjit/sum-product_fx:latest
+    image: sandipranjit/calculator:latest
     container_name: calculator-app
     depends_on:
       - db
