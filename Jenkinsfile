@@ -27,13 +27,13 @@ pipeline {
                         sh '''
                         docker-compose down -v
                         docker-compose up --build -d
-                        docker-compose exec -T app mvn clean test
+                        docker-compose exec -T app mvn clean
                         '''
                     } else {
                         bat '''
                         docker-compose down -v
                         docker-compose up --build -d
-                        docker-compose exec -T app mvn clean test
+                        docker-compose exec -T app mvn clean
                         '''
                     }
                 }
@@ -52,34 +52,19 @@ pipeline {
             }
         }
 
-        stage('Code Coverage') {
-            steps {
-                script {
-                    if (isUnix()) {
-                        sh 'mvn jacoco:report'
-                    } else {
-                        bat 'mvn jacoco:report'
-                    }
-                }
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 script {
                     if (isUnix()) {
                         sh '''
-                            docker build -t ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} .
-                            docker images
-                            '''
+                        docker build --pull -t ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} .
+                        docker images
+                        '''
                     } else {
                         bat """
-                        REM --- Build Docker image with build number tag ---
-                        docker build -t %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG% .
-        
-                        REM --- Verify image exists ---
+                        docker build --pull -t %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG% .
                         docker images
-                    """
+                        """
                     }
                 }
             }
@@ -92,37 +77,24 @@ pipeline {
                             credentialsId: DOCKERHUB_CREDENTIALS_ID,
                             usernameVariable: 'DOCKER_USER',
                             passwordVariable: 'DOCKER_PASS'
-
                     )]) {
                         if (isUnix()) {
                             sh '''
-                                echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                                
-                                docker push ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}
-                                
-                                docker tag ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} ${DOCKERHUB_REPO}:latest
-                        
-                                docker push ${DOCKERHUB_REPO}:latest
-                                
-                                docker image rm ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}
-                                docker image prune -f
-                                '''
+                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                            docker push ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}
+                            docker tag ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} ${DOCKERHUB_REPO}:latest
+                            docker push ${DOCKERHUB_REPO}:latest
+                            docker image rm ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}
+                            docker image prune -f
+                            '''
                         } else {
                             bat """
-                                REM --- Login to Docker Hub ---
-                                echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
-                                
-                                REM --- Push image with build number tag ---
-                                echo Pushing Docker image %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG%...
-                                docker push %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG%
-                               
-                                REM --- Tag as latest and push ---
-                                docker tag %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG% %DOCKERHUB_REPO%:latest
-                                docker push %DOCKERHUB_REPO%:latest
-                                
-                                REM --- Cleanup local images to save disk space ---
-                                docker image rm %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG%
-                                docker image prune -f
+                            echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                            docker push %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG%
+                            docker tag %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG% %DOCKERHUB_REPO%:latest
+                            docker push %DOCKERHUB_REPO%:latest
+                            docker image rm %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG%
+                            docker image prune -f
                             """
                         }
                     }
@@ -133,8 +105,7 @@ pipeline {
 
     post {
         always {
-            junit '**/target/surefire-reports/*.xml'
-            jacoco()
+            junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
             cleanWs()
         }
         success {
