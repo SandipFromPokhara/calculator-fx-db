@@ -26,8 +26,5 @@ RUN mvn clean package -DskipTests
 # List target folder to verify JAR
 RUN ls -l target
 
-# Copy the built JAR (use wildcard to match actual JAR name)
-COPY target/*-SNAPSHOT.jar app.jar
-
 # Run the **shaded JAR** with JavaFX modules
 CMD ["java", "--module-path", "/opt/javafx-sdk-21/lib", "--add-modules", "javafx.controls,javafx.fxml", "-jar", "app.jar"]
