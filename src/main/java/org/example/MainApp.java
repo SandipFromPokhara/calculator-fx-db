@@ -13,10 +13,13 @@ public class MainApp extends Application {
         Scene scene = new Scene(loader.load());
         stage.setTitle("Sum & Product Calculator");
         stage.setScene(scene);
+        stage.setMinWidth(320);
+        stage.setMinHeight(250);
+
         stage.show();
     }
 
     public static void main(String[] args) {
-        launch();
+        launch(args);
     }
 }
