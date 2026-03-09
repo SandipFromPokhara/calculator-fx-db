@@ -25,6 +25,8 @@ public class CalculatorController {
                 return;
             }
 
+            division = Math.round(division * 100.0) / 100.0;
+
             resultLabel.setText("Sum: " + sum + ", Product: " + product + ", Subtract: " + subtract + ", Division: " + division);
 
             // Save to DB
