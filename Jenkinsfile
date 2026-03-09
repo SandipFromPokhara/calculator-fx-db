@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDENTIALS_ID = 'Docker_Hub'
-        DOCKERHUB_REPO = 'sandipranjit/notevault'
+        DOCKERHUB_REPO = 'sandipranjit/calculator'
         DOCKER_IMAGE_TAG = "${env.BUILD_NUMBER}"
         BUILD_DATE = "${new Date().format('yyyy-MM-dd')}"
     }
@@ -20,31 +20,21 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build & Test') {
             steps {
                 script {
                     if (isUnix()) {
-                        sh 'mvn clean compile'
+                        sh '''
+                        docker-compose down -v
+                        docker-compose up --build -d
+                        docker-compose exec -T app mvn clean test
+                        '''
                     } else {
-                        bat 'mvn clean compile'
-                    }
-                }
-            }
-        }
-
-        stage('Test') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(
-                            credentialsId: DB_CREDENTIALS_ID,
-                            usernameVariable: 'DB_USER',
-                            passwordVariable: 'DB_PASSWORD'
-                    )]) {
-                        if (isUnix()) {
-                            sh 'mvn test -DDB_USER=$DB_USER -DDB_PASSWORD=$DB_PASSWORD -DDB_HOST=$DB_HOST -DDB_PORT=$DB_PORT -DDB_NAME=$DB_NAME'
-                        } else {
-                            bat 'mvn test -DDB_USER=%DB_USER% -DDB_PASSWORD=%DB_PASSWORD% -DDB_HOST=%DB_HOST% -DDB_PORT=%DB_PORT% -DDB_NAME=%DB_NAME%'
-                        }
+                        bat '''
+                        docker-compose down -v
+                        docker-compose up --build -d
+                        docker-compose exec -T app mvn clean test
+                        '''
                     }
                 }
             }
@@ -54,9 +44,9 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        sh 'mvn package -DskipTests'
+                        sh 'docker-compose exec -T app mvn package -DskipTests'
                     } else {
-                        bat 'mvn package -DskipTests'
+                        bat 'docker-compose exec -T app mvn package -DskipTests'
                     }
                 }
             }
