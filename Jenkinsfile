@@ -20,37 +20,6 @@ pipeline {
             }
         }
 
-        stage('Build & Test') {
-            steps {
-                script {
-                    if (isUnix()) {
-                        sh '''
-                        docker-compose down -v
-                        docker-compose up --build -d
-                        docker-compose exec -T app mvn clean
-                        '''
-                    } else {
-                        bat '''
-                        docker-compose down -v
-                        docker-compose up --build -d
-                        docker-compose exec -T app mvn clean
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Package') {
-            steps {
-                script {
-                    if (isUnix()) {
-                        sh 'docker-compose exec -T app mvn package -DskipTests'
-                    } else {
-                        bat 'docker-compose exec -T app mvn package -DskipTests'
-                    }
-                }
-            }
-        }
 
         stage('Build Docker Image') {
             steps {
@@ -65,6 +34,38 @@ pipeline {
                         docker build --pull -t %DOCKERHUB_REPO%:%DOCKER_IMAGE_TAG% .
                         docker images
                         """
+                    }
+                }
+            }
+        }
+
+        stage('Verify DB Tables') {
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh '''
+                # Start containers in detached mode
+                docker-compose up -d
+
+                # Wait a few seconds for DB to initialize
+                sleep 10
+
+                # Show databases and tables
+                docker-compose exec -T db mysql -uroot -pCalcPass123 -e "SHOW DATABASES;"
+                docker-compose exec -T db mysql -uroot -pCalcPass123 -e "USE calc_data; SHOW TABLES;"
+                '''
+                    } else {
+                        bat """
+                REM Start containers in detached mode
+                docker-compose up -d
+
+                REM Wait a few seconds for DB to initialize
+                timeout /t 10
+
+                REM Show databases and tables
+                docker-compose exec db mysql -uroot -pCalcPass123 -e "SHOW DATABASES;"
+                docker-compose exec db mysql -uroot -pCalcPass123 -e "USE calc_data; SHOW TABLES;"
+                """
                     }
                 }
             }

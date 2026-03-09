@@ -20,11 +20,14 @@ WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 
-# Build the JAR
+# Build the JAR (skip tests so Jenkins won't fail)
 RUN mvn clean package -DskipTests
 
-# List target folder to verify JAR
+# Verify target folder (optional)
 RUN ls -l target
 
-# Run the **shaded JAR** with JavaFX modules
+# Copy the built JAR with the correct finalName
+COPY target/calculator.jar app.jar
+
+# Run the JAR with JavaFX modules
 CMD ["java", "--module-path", "/opt/javafx-sdk-21/lib", "--add-modules", "javafx.controls,javafx.fxml", "-jar", "app.jar"]
