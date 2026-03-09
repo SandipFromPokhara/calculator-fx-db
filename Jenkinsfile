@@ -59,7 +59,7 @@ pipeline {
                             docker-compose up -d
 
                             REM Wait 10 seconds for DB
-                            powershell -Command "Start-Sleep -s 10"
+                            powershell -Command "Start-Sleep -s 30"
 
                             REM Check databases and tables
                             docker exec -i calculator-db mysql -uroot -pCalcPass123 -e "SHOW DATABASES;"
