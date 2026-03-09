@@ -43,28 +43,28 @@ pipeline {
                 script {
                     if (isUnix()) {
                         sh '''
-                            # Start containers
-                            docker-compose up -d
+                    # Start containers
+                    docker-compose up -d
 
-                            # Wait for DB to initialize
-                            sleep 10
+                    # Wait for DB to initialize
+                    sleep 30
 
-                            # Check databases and tables
-                            docker exec -i calculator-db mysql -uroot -pCalcPass123 -e "SHOW DATABASES;"
-                            docker exec -i calculator-db mysql -uroot -pCalcPass123 -e "USE calc_data; SHOW TABLES;"
-                        '''
+                    # Use mariadb CLI instead of mysql
+                    docker exec -i calculator-db mariadb -uroot -pCalcPass123 -e "SHOW DATABASES;"
+                    docker exec -i calculator-db mariadb -uroot -pCalcPass123 -e "USE calc_data; SHOW TABLES;"
+                '''
                     } else {
                         bat """
-                            REM Start containers
-                            docker-compose up -d
+                    REM Start containers
+                    docker-compose up -d
 
-                            REM Wait 10 seconds for DB
-                            powershell -Command "Start-Sleep -s 30"
+                    REM Wait 30 seconds for DB
+                    powershell -Command "Start-Sleep -s 30"
 
-                            REM Check databases and tables
-                            docker exec -i calculator-db mysql -uroot -pCalcPass123 -e "SHOW DATABASES;"
-                            docker exec -i calculator-db mysql -uroot -pCalcPass123 -e "USE calc_data; SHOW TABLES;"
-                        """
+                    REM Use mariadb CLI instead of mysql
+                    docker exec -i calculator-db mariadb -uroot -pCalcPass123 -e "SHOW DATABASES;"
+                    docker exec -i calculator-db mariadb -uroot -pCalcPass123 -e "USE calc_data; SHOW TABLES;"
+                """
                     }
                 }
             }
